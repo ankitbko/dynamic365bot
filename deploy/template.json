@@ -1,116 +1,114 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "botSiteName": {
-            "type": "String",
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"botSiteName": {
+			"type": "String",
 			"metadata": {
-                "description": "Enter the name of the site where bot will be hosted. The name act as subdomain for the bot."
-            }
-        },
+				"description": "Enter the name of the site where bot will be hosted. The name act as subdomain for the bot."
+			}
+		},
 		"botName": {
 			"type": "String",
 			"metadata": {
-                "description": "Name of the bot to be registered."
-            }
+				"description": "Name of the bot to be registered."
+			}
 		},
 		"botSku": {
 			"defaultValue": "S1",
 			"type": "String",
 			"allowedValues": [
 				"F0",
-				"S1",
-			],	
+				"S1"
+			],
 			"metadata": {
-                "description": "Plan for the bot service. F0 for free or S1 for standard."
-            }
+				"description": "Plan for the bot service. F0 for free or S1 for standard."
+			}
 		},
 		"luisName": {
 			"type": "String",
 			"metadata": {
-                "description": "Name of LUIS service."
-            }
+				"description": "Name of LUIS service."
+			}
 		},
 		"luisSku": {
 			"defaultValue": "S0",
 			"type": "String",
 			"allowedValues": [
 				"F0",
-				"S0",
+				"S0"
 			],
 			"metadata": {
-                "description": "Plan for LUIS service. F0 for free or S0 for standard."
-            }
+				"description": "Plan for LUIS service. F0 for free or S0 for standard."
+			}
 		},
-		"crmUrl" : {
+		"crmUrl": {
 			"type": "String",
-			"metadata" : {
+			"metadata": {
 				"description": "Base URI of CRM"
 			}
-		},		
-		"crmApiVersion" : {
+		},
+		"crmApiVersion": {
 			"type": "String",
-			"metadata" : {
+			"metadata": {
 				"description": "CRM OData API Version. Example v8.1"
 			}
-		},		
-		"msAppId" : {
+		},
+		"msAppId": {
 			"type": "String",
-			"metadata" : {
+			"metadata": {
 				"description": "ID of Microsoft Converged Application."
 			}
-		},		
-		"msAppPassword" : {
+		},
+		"msAppPassword": {
 			"type": "String",
-			"metadata" : {
+			"metadata": {
 				"description": "Password of Microsoft Converged Application."
 			}
 		},
-		"LuisModelId" : {
+		"LuisModelId": {
 			"type": "String",
-			"metadata" : {
+			"metadata": {
 				"description": "Model ID of LUIS application."
 			}
 		}
-    },
-    "variables": {
+	},
+	"variables": {
 		"botPlanName": "serverfarm_dynamicbot",
-		"identityResourceId" : "[concat(resourceId('Microsoft.Web/sites', parameters('botSiteName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
+		"identityResourceId": "[concat(resourceId('Microsoft.Web/sites', parameters('botSiteName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
 		"keyVaultName": "[substring(concat('KeyVault',parameters('botName'),uniqueString(resourceGroup().id)),0,22)]",
 		"activeDirectoryMode": "v1",
 		"activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
 		"tenantId": "[subscription().tenantId]",
 		"appInsightsName": "[concat(parameters('botSiteName'), 'appInsight')]"
 	},
-    "resources": [
-        {
-            "type": "Microsoft.Web/serverfarms",
-            "sku": {
-                "name": "S1",
-                "tier": "Standard",
-                "size": "S1",
-                "family": "S",
-                "capacity": 1
-            },
-            "kind": "app",
-            "name": "[variables('botPlanName')]",
-            "apiVersion": "2016-09-01",
-            "location": "[resourceGroup().location]"
-        },
-        {
-            "type": "Microsoft.Web/sites",
-            "kind": "api",
-            "name": "[parameters('botSiteName')]",
-            "apiVersion": "2016-08-01",
-            "location": "[resourceGroup().location]",
+	"resources": [{
+			"type": "Microsoft.Web/serverfarms",
+			"sku": {
+				"name": "S1",
+				"tier": "Standard",
+				"size": "S1",
+				"family": "S",
+				"capacity": 1
+			},
+			"kind": "app",
+			"name": "[variables('botPlanName')]",
+			"apiVersion": "2016-09-01",
+			"location": "[resourceGroup().location]"
+		},
+		{
+			"type": "Microsoft.Web/sites",
+			"kind": "api",
+			"name": "[parameters('botSiteName')]",
+			"apiVersion": "2016-08-01",
+			"location": "[resourceGroup().location]",
 			"identity": {
 				"type": "SystemAssigned"
 			},
-            "properties": {
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('botPlanName'))]",
-                "siteConfig": {
-					"appSettings": [
-						{
+			"properties": {
+				"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('botPlanName'))]",
+				"siteConfig": {
+					"appSettings": [{
 							"name": "BotId",
 							"value": "[parameters('botName')]"
 						},
@@ -144,11 +142,11 @@
 						}
 					]
 				}
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('botPlanName'))]"
-            ]
-        },
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Web/serverfarms', variables('botPlanName'))]"
+			]
+		},
 		{
 			"apiVersion": "2017-12-01",
 			"type": "Microsoft.BotService/botServices",
@@ -172,78 +170,76 @@
 			]
 		},
 		{
-            "type": "Microsoft.KeyVault/vaults",
-            "name": "[variables('keyVaultName')]",
-            "apiVersion": "2015-06-01",
-            "location": "[resourceGroup().location]",
-            "tags": {},
-            "properties": {
-                "sku": {
-                    "family": "A",
-                    "name": "Standard"
-                },
-                "tenantId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').tenantId]",
-                "accessPolicies": [
-                    {
-                        "tenantId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').tenantId]",
-                        "objectId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').principalId]",
-                        "permissions": {
-                            "secrets": [
-                                "get"
-                            ]
-                        }
-                    }
-                ],
-                "enabledForDeployment": false
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Web/sites/', parameters('botSiteName'))]"
-            ]
+			"type": "Microsoft.KeyVault/vaults",
+			"name": "[variables('keyVaultName')]",
+			"apiVersion": "2015-06-01",
+			"location": "[resourceGroup().location]",
+			"tags": {},
+			"properties": {
+				"sku": {
+					"family": "A",
+					"name": "Standard"
+				},
+				"tenantId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').tenantId]",
+				"accessPolicies": [{
+					"tenantId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').tenantId]",
+					"objectId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').principalId]",
+					"permissions": {
+						"secrets": [
+							"get"
+						]
+					}
+				}],
+				"enabledForDeployment": false
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Web/sites/', parameters('botSiteName'))]"
+			]
 		},
 		{
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('keyVaultName'), '/', 'LuisSubscriptionKey')]",
-            "apiVersion": "2015-06-01",
+			"type": "Microsoft.KeyVault/vaults/secrets",
+			"name": "[concat(variables('keyVaultName'), '/', 'LuisSubscriptionKey')]",
+			"apiVersion": "2015-06-01",
 			"properties": {
 				"value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('luisName')), providers('Microsoft.CognitiveServices', 'accounts').apiVersions[0]).key1]"
 			},
-            "dependsOn": [
-                "[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
+			"dependsOn": [
+				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
 				"[concat('Microsoft.CognitiveServices/accounts/', parameters('luisName'))]"
-            ]
+			]
 		},
 		{
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('keyVaultName'), '/', 'LuisModelId')]",
-            "apiVersion": "2015-06-01",
+			"type": "Microsoft.KeyVault/vaults/secrets",
+			"name": "[concat(variables('keyVaultName'), '/', 'LuisModelId')]",
+			"apiVersion": "2015-06-01",
 			"properties": {
 				"value": "[parameters('LuisModelId')]"
 			},
-            "dependsOn": [
-                "[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
-            ]
+			"dependsOn": [
+				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
+			]
 		},
 		{
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('keyVaultName'), '/', 'OrganizationUrl')]",
-            "apiVersion": "2015-06-01",
+			"type": "Microsoft.KeyVault/vaults/secrets",
+			"name": "[concat(variables('keyVaultName'), '/', 'OrganizationUrl')]",
+			"apiVersion": "2015-06-01",
 			"properties": {
 				"value": "[parameters('crmUrl')]"
 			},
-            "dependsOn": [
-                "[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
-            ]
+			"dependsOn": [
+				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
+			]
 		},
 		{
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('keyVaultName'), '/', 'CrmApiVersion')]",
-            "apiVersion": "2015-06-01",
+			"type": "Microsoft.KeyVault/vaults/secrets",
+			"name": "[concat(variables('keyVaultName'), '/', 'CrmApiVersion')]",
+			"apiVersion": "2015-06-01",
 			"properties": {
 				"value": "[parameters('crmApiVersion')]"
 			},
-            "dependsOn": [
-                "[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
-            ]
+			"dependsOn": [
+				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
+			]
 		},
 		{
 			"apiVersion": "2016-02-01-preview",
@@ -255,7 +251,7 @@
 				"name": "[parameters('luisSku')]"
 			},
 			"properties": {}
-		},		
+		},
 		{
 			"name": "[variables('appInsightsName')]",
 			"type": "microsoft.insights/components",
@@ -268,9 +264,9 @@
 			"properties": {
 				"ApplicationId": "[parameters('botName')]"
 			}
-		},
-    ],
-	"outputs":{
+		}
+	],
+	"outputs": {
 		"luisKey": {
 			"type": "string",
 			"value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('luisName')), providers('Microsoft.CognitiveServices', 'accounts').apiVersions[0]).key1]"
@@ -286,6 +282,6 @@
 		"botRegistrationName": {
 			"type": "string",
 			"value": "[parameters('botName')]"
-		}		
+		}
 	}
 }
