@@ -101,7 +101,7 @@ Write-Host ($adAppResult | Out-String) -ForegroundColor Green
 Write-Host "Trying to update AppSettings"
 $botApp = Get-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName
 $AppSettings =	@{
-	"ActiveDirectory.RedirectUri" = "$botCallbackUrl";
+	"ActiveDirectory.RedirectUrl" = "$botCallbackUrl";
 	"ActiveDirectory.ClientId" = "$($adAppResult.appId)";
 	"ActiveDirectory.ClientSecret" = "$($adAppResult.appSecret)" 
 }
