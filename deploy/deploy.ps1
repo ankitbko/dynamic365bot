@@ -17,13 +17,17 @@
  .PARAMETER deploymentName
     The deployment name.
 
- .PARAMETER templateFilePath
-    Optional, path to the template file. Defaults to template.json.
+ .PARAMETER adAppName
+    Name of the Azure AD application that will be created. Native app will have _native suffix
 
- .PARAMETER parametersFilePath
-    Optional, path to the parameters file. Defaults to parameters.json. If file is not found, will prompt for parameter values based on template.
+ .PARAMETER luisAuthoringKey
+    LUIS authoring key.
+
+ .PARAMETER templateParameters
+    Parameters to be passed to ARM template.
 #>
 
+[cmdletbinding()]
 param(
  [Parameter(Mandatory=$True)]
  [string]
@@ -82,13 +86,16 @@ if(!(Get-Module -Listavailable -Name AzureAD)) {
 	Install-Module -Name AzureAD -AllowClobber
 }
 
+Import-Module AzureRM
+Import-Module AzureRM.Profile
+Import-Module AzureAD
 $ScriptPath = Split-Path $MyInvocation.MyCommand.Path
 
 # Deploy Resources
 $deploymentResult = & "$ScriptPath\deployArm.ps1" $subscriptionId $resourceGroupName $resourceGroupLocation $deploymentName $templateParameters
 
-Write-Host "Deployment Done. Deployment Result:" -ForegroundColor Green
-Write-Host ($deploymentResult | Out-String) -ForegroundColor Green
+Write-Verbose "Deployment Result:"
+Write-Verbose ($deploymentResult | Out-String)
 
 $luisSubscriptionKey = $deploymentResult.Outputs.luisKey.Value
 $botSiteObject = $deploymentResult.Outputs.item("botSite").Value.ToString() | ConvertFrom-Json
@@ -96,11 +103,16 @@ $botHostName = $botSiteObject.properties.defaultHostname
 $botCallbackUrl = "https://$botHostName/api/OAuthCallback"
 
 # Register AzureAD V1 App.
+Write-Host "Creating Azure App"
 $adAppResult = & "$ScriptPath\adappregister.ps1" $adAppName $botCallbackUrl $true "ms-dynamics-app://luis"
 
-Write-Host "Azure App created"
-Write-Host ($adAppResult | Out-String) -ForegroundColor Green
+Write-Verbose "Azure App created"
+Write-Verbose ($adAppResult | Out-String)
 
+# Create and train luis app
+Write-Host "Training LUIS"
+Write-Host "Login using CRM Credentials" -ForegroundColor Yellow
+Start-Sleep -m 2000
 $luisAppId = & "$ScriptPath\trainluis\Microsoft.Dynamics.BotFramework.Luis.exe" `
     --crmurl $templateParameters.crmurl`
     --redirecturl $adAppResult.nativeReplyUrl `
@@ -109,15 +121,16 @@ $luisAppId = & "$ScriptPath\trainluis\Microsoft.Dynamics.BotFramework.Luis.exe" 
     --authoringkey $luisAuthoringKey
 
 #update luis appid in keyvault
+Write-Host "Setting Luis AppId in Key Vault"
 $userId = (Get-AzureRmContext).Account.Id
 $userObjectId = (Get-AzureADUser -ObjectId $userId).ObjectId
 $accessPolicyResult = Set-AzureRmKeyVaultAccessPolicy -VaultName $deploymentResult.Outputs.keyVaultName.Value -ObjectId $userObjectId -PermissionsToSecrets set,get,list -PassThru
-Write-Host ($accessPolicyResult | Out-String) -ForegroundColor Yellow
+Write-Verbose ($accessPolicyResult | Out-String)
 $luisSecret = ConvertTo-SecureString -String $luisAppId -AsPlainText -Force
 Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'LuisModelId' -SecretValue $luisSecret
 
 # Update WebApp Config
-Write-Host "Trying to update AppSettings"
+Write-Host "Updating AppSettings"
 $botApp = Get-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName
 $AppSettings =	@{
 	"ActiveDirectory.RedirectUrl" = "$botCallbackUrl";
@@ -128,8 +141,8 @@ foreach ($pair in $botApp.SiteConfig.AppSettings) { $AppSettings[$pair.Name] = $
 
 Set-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName -AppSettings $AppSettings
 
-Write-Host "Appsettings Updated"
-Write-Host ($AppSettings | Out-String) -ForegroundColor Green
+Write-Verbose "Appsettings Updated"
+Write-Verbose ($AppSettings | Out-String)
 
 # Create a App Insight API key and set it to Bot Registration
 Write-Host "Generating AppInsight API Key"
@@ -137,13 +150,13 @@ $apiKeyDescription="DynamicsBotkey"
 $permissions = @("ReadTelemetry", "WriteAnnotations")
 $appInsightName = $deploymentResult.Outputs.appInsightName.Value
 $appInsightApiKey = New-AzureRmApplicationInsightsApiKey -ResourceGroupName $resourceGroupName -Name $appInsightName -Description $apiKeyDescription -Permissions $permissions
-Write-Host ($appInsightApiKey | Out-String) -ForegroundColor Green
+Write-Verbose ($appInsightApiKey | Out-String)
 
 Write-Host "Setting AppInsight API Key in Bot Registration"
 $botRegistrationName = $deploymentResult.Outputs.botRegistrationName.Value
 $botRegistration = Get-AzureRmResource -Name $botRegistrationName -ResourceGroup $resourceGroupName -ExpandProperties
 $botRegistration.Properties | Add-Member developerAppInsightsApiKey $appInsightApiKey.ApiKey
-Write-Host "New Bot Registration Property: $($botRegistration.Properties | Out-String)" -ForegroundColor Green
+Write-Verbose "New Bot Registration Property: $($botRegistration.Properties | Out-String)"
 $botRegistration | Set-AzureRmResource -Force
 Write-Host "AppInsight API Key Set"
 

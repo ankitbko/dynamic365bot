@@ -59,7 +59,7 @@ Function RegisterRP {
         [string]$ResourceProviderNamespace
     )
 
-    Write-Host "Registering resource provider '$ResourceProviderNamespace'";
+    Write-Verbose "Registering resource provider '$ResourceProviderNamespace'";
     Register-AzureRmResourceProvider -ProviderNamespace $ResourceProviderNamespace;
 }
 
@@ -70,17 +70,17 @@ Function RegisterRP {
 $ErrorActionPreference = "Stop"
 
 # sign in
-Write-Host "Logging in...";
+Write-Host "Logging in... Enter Azure credentials";
 Login-AzureRmAccount;
 
 # select subscription
-Write-Host "Selecting subscription '$subscriptionId'";
+Write-Verbose "Selecting subscription '$subscriptionId'";
 Select-AzureRmSubscription -SubscriptionID $subscriptionId;
 
 # Register RPs
 $resourceProviders = @("microsoft.cognitiveservices","microsoft.web");
 if($resourceProviders.length) {
-    Write-Host "Registering resource providers"
+    Write-Verbose "Registering resource providers"
     foreach($resourceProvider in $resourceProviders) {
         RegisterRP($resourceProvider);
     }
@@ -90,21 +90,22 @@ if($resourceProviders.length) {
 $resourceGroup = Get-AzureRmResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
 if(!$resourceGroup)
 {
-    Write-Host "Resource group '$resourceGroupName' does not exist. To create a new resource group, please enter a location.";
+    Write-Verbose "Resource group '$resourceGroupName' does not exist.";
     if(!$resourceGroupLocation) {
         $resourceGroupLocation = Read-Host "resourceGroupLocation";
     }
-    Write-Host "Creating resource group '$resourceGroupName' in location '$resourceGroupLocation'";
+    Write-Verbose "Creating resource group '$resourceGroupName' in location '$resourceGroupLocation'";
     New-AzureRmResourceGroup -Name $resourceGroupName -Location $resourceGroupLocation
 }
 else{
-    Write-Host "Using existing resource group '$resourceGroupName'";
+    Write-Verbose "Using existing resource group '$resourceGroupName'";
 }
 
 # Start the deployment
-Write-Host "Starting deployment...";
+Write-Host "Starting Azure resources deployment. This may take a while...";
 if(![String]::IsNullOrWhiteSpace($parametersFilePath) -And (Test-Path $parametersFilePath)) {
     New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath;
 } else {
     New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterObject  $templateParameters;
 }
+Write-Host "Deployment done.";

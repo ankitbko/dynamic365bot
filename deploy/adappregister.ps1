@@ -36,7 +36,7 @@ Function AddResourcePermission($requiredAccess, $exposedPermissions, $requiredAc
     foreach ($permission in $requiredAccesses.Trim().Split(" ")) {
         $reqPermission = $null
         $reqPermission = $exposedPermissions | Where-Object {$_.Value -contains $permission}
-        Write-Host "Collected information for $($reqPermission.Value) of type $permissionType" -ForegroundColor Green
+        Write-Verbose "Collected information for $($reqPermission.Value) of type $permissionType"
         $resourceAccess = New-Object Microsoft.Open.AzureAD.Model.ResourceAccess
         $resourceAccess.Type = $permissionType
         $resourceAccess.Id = $reqPermission.Id    
@@ -71,11 +71,11 @@ Function CreateAppKey($fromDate, $durationInYears, $pw) {
     $testKey = GenerateAppKey -fromDate $fromDate -durationInYears $durationInYears -pw $pw
   
     while ($testKey.Value -match "\+" -or $testKey.Value -match "/") {
-        Write-Host "Secret contains + or / and may not authenticate correctly. Regenerating..." -ForegroundColor Yellow
+        Write-Verbose "Secret contains + or / and may not authenticate correctly. Regenerating..."
         $pw = ComputePassword
         $testKey = GenerateAppKey -fromDate $fromDate -durationInYears $durationInYears -pw $pw
     }
-    Write-Host "Secret doesn't contain + or /. Continuing..." -ForegroundColor Green
+    Write-Verbose "Secret doesn't contain + or /. Continuing..."
     $key = $testKey
   
     return $key
@@ -107,7 +107,7 @@ function GetOrCreateMicrosoftGraphServicePrincipal {
 }
   
 Connect-AzureAD
-Write-Host (Get-AzureADTenantDetail).displayName
+Write-Verbose "Tenant: $((Get-AzureADTenantDetail).displayName)"
   
 # Check for a Microsoft Graph Service Principal. If it doesn't exist already, create it.
 $graphsp = GetOrCreateMicrosoftGraphServicePrincipal
@@ -115,6 +115,7 @@ $graphsp = GetOrCreateMicrosoftGraphServicePrincipal
 $existingapp = $null
 $existingapp = get-azureadapplication -Filter "DisplayName eq '$applicationName'"
 if ($existingapp) {
+    Write-Verbose "App already exist. Deleting. App: $($existingapp | Out-String)"
     Remove-Azureadapplication -ObjectId $existingApp.objectId
 }
 
@@ -132,7 +133,7 @@ if ($graphsp) {
     $requiredResourcesAccess.Add($microsoftGraphRequiredPermissions)
   
     if ($DelegatedPermissions) {
-        Write-Host "Delegated Permissions specified, preparing permissions for Azure AD Graph API"
+        Write-Verbose "Delegated Permissions specified, preparing permissions for Azure AD Graph API"
         # Add Required Resources Access (Azure AD Graph)
         #$AzureADGraphRequiredPermissions = GetRequiredPermissions -reqsp $azureadsp -requiredApplicationPermissions "Directory.ReadWrite.All"
         $AzureADGraphRequiredPermissions = GetRequiredPermissions -reqsp $azureadsp -requiredDelegatedPermissions "User.Read"
@@ -145,7 +146,7 @@ if ($graphsp) {
     $fromDate = [System.DateTime]::Now
     $appKey = CreateAppKey -fromDate $fromDate -durationInYears 2 -pw $pw
   
-    Write-Host "Creating the AAD application $applicationName" -ForegroundColor Blue
+    Write-Verbose "Creating the AAD application $applicationName"
 
     $randomGuid = [guid]::newguid()
     $identifierUri = $appIdURI + '/' + $randomGuid.toString().Split('-')[0]
@@ -162,20 +163,20 @@ if ($graphsp) {
 
     }
     catch [Exception] {
-        Write-Host $_.Exception | format-list -force
+        Write-Verbose $_.Exception | format-list -force
     }
 
-    Write-Host "App Created" -ForegroundColor Green
+    Write-Verbose "App Created"
       
     # Creating the Service Principal for the application
     $servicePrincipal = New-AzureADServicePrincipal -AppId $aadApplication.AppId
       
-    Write-Host "Service Principle Created" -ForegroundColor Green
+    Write-Verbose "Service Principle Created"
 
-    Write-Host "Application ID: $aadApplication.AppId" -ForegroundColor DarkYellow
-    Write-Host "Application Secret: $appkey.Value" -ForegroundColor DarkYellow
+    Write-Verbose "Application ID: $aadApplication.AppId"
+    Write-Verbose "Application Secret: $appkey.Value"
     $tenant_id = (Get-AzureADTenantDetail).ObjectId
-    Write-Host "Tenant ID: $tenant_id" -ForegroundColor DarkYellow 
+    Write-Verbose "Tenant ID: $tenant_id"
 
 
     if($createNativeApp) {
@@ -183,10 +184,11 @@ if ($graphsp) {
 
         $existingapp = get-azureadapplication -SearchString $nativeApplicationName
         if ($existingapp) {
+            Write-Verbose "App already exist. Deleting. App: $($existingapp | Out-String)"
             Remove-Azureadapplication -ObjectId $existingApp.objectId
         }
 
-        Write-Host "Creating Native App"
+        Write-Verbose "Creating Native App"
         try 
         {
             $nativceApplication = New-AzureADApplication -DisplayName $nativeApplicationName `
@@ -196,10 +198,10 @@ if ($graphsp) {
 
         }
         catch [Exception] {
-            Write-Host $_.Exception | format-list -force
+            Write-Verbose $_.Exception | format-list -force
         }
         $servicePrincipal = New-AzureADServicePrincipal -AppId $nativceApplication.AppId
-        Write-Host "Native App Created" -ForegroundColor Green
+        Write-Verbose "Native App Created"
     }
 
 	[hashtable]$Return = @{}
