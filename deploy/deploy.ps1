@@ -44,6 +44,10 @@ param(
  [Parameter(Mandatory=$True)]
  [string]
  $adAppName,
+
+ [Parameter(Mandatory=$True)]
+ [string]
+ $luisAuthoringKey,
  
  [Parameter(Mandatory=$True)]
  [object]
@@ -81,7 +85,7 @@ if(!(Get-Module -Listavailable -Name AzureAD)) {
 $ScriptPath = Split-Path $MyInvocation.MyCommand.Path
 
 # Deploy Resources
-	$deploymentResult = & "$ScriptPath\deployArm.ps1" $subscriptionId $resourceGroupName $resourceGroupLocation $deploymentName $templateParameters
+$deploymentResult = & "$ScriptPath\deployArm.ps1" $subscriptionId $resourceGroupName $resourceGroupLocation $deploymentName $templateParameters
 
 Write-Host "Deployment Done. Deployment Result:" -ForegroundColor Green
 Write-Host ($deploymentResult | Out-String) -ForegroundColor Green
@@ -92,10 +96,25 @@ $botHostName = $botSiteObject.properties.defaultHostname
 $botCallbackUrl = "https://$botHostName/api/OAuthCallback"
 
 # Register AzureAD V1 App.
-$adAppResult = & "$ScriptPath\adappregister.ps1" $adAppName $botCallbackUrl
+$adAppResult = & "$ScriptPath\adappregister.ps1" $adAppName $botCallbackUrl $true "ms-dynamics-app://luis"
 
 Write-Host "Azure App created"
 Write-Host ($adAppResult | Out-String) -ForegroundColor Green
+
+$luisAppId = & "$ScriptPath\trainluis\Microsoft.Dynamics.BotFramework.Luis.exe" `
+    --crmurl $templateParameters.crmurl`
+    --redirecturl $adAppResult.nativeReplyUrl `
+    --clientid $adAppResult.nativeAppId `
+    --templatepath "$ScriptPath\luistemplate\d365bot.json" `
+    --authoringkey $luisAuthoringKey
+
+#update luis appid in keyvault
+$userId = (Get-AzureRmContext).Account.Id
+$userObjectId = (Get-AzureADUser -ObjectId $userId).ObjectId
+$accessPolicyResult = Set-AzureRmKeyVaultAccessPolicy -VaultName $deploymentResult.Outputs.keyVaultName.Value -ObjectId $userObjectId -PermissionsToSecrets set,get,list -PassThru
+Write-Host ($accessPolicyResult | Out-String) -ForegroundColor Yellow
+$luisSecret = ConvertTo-SecureString -String $luisAppId -AsPlainText -Force
+Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'LuisModelId' -SecretValue $luisSecret
 
 # Update WebApp Config
 Write-Host "Trying to update AppSettings"

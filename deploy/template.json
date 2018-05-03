@@ -65,12 +65,6 @@
 			"metadata": {
 				"description": "Password of Microsoft Converged Application."
 			}
-		},
-		"LuisModelId": {
-			"type": "String",
-			"metadata": {
-				"description": "Model ID of LUIS application."
-			}
 		}
 	},
 	"variables": {
@@ -210,17 +204,6 @@
 		},
 		{
 			"type": "Microsoft.KeyVault/vaults/secrets",
-			"name": "[concat(variables('keyVaultName'), '/', 'LuisModelId')]",
-			"apiVersion": "2015-06-01",
-			"properties": {
-				"value": "[parameters('LuisModelId')]"
-			},
-			"dependsOn": [
-				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
-			]
-		},
-		{
-			"type": "Microsoft.KeyVault/vaults/secrets",
 			"name": "[concat(variables('keyVaultName'), '/', 'OrganizationUrl')]",
 			"apiVersion": "2015-06-01",
 			"properties": {
@@ -282,6 +265,10 @@
 		"botRegistrationName": {
 			"type": "string",
 			"value": "[parameters('botName')]"
+		},
+		"keyVaultName": {
+			"type": "string",
+			"value": "[variables('keyVaultName')]"
 		}
 	}
 }

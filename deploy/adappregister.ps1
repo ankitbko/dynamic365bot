@@ -9,9 +9,15 @@ param(
 
  [Parameter(Mandatory=$True)]
  [string]
- $appIdUri
+ $appIdUri,
+
+ [bool]
+ $createNativeApp = $true,
+
+ [string]
+ $nativeAppReplyUri
 )
-  
+
 # Modify the homePage, appIdURI and logoutURI values to whatever valid URI you like. They don't need to be actual addresses.
 $homePage = $appIdURI
 $logoutURI = $appIdURI
@@ -105,13 +111,13 @@ Write-Host (Get-AzureADTenantDetail).displayName
   
 # Check for a Microsoft Graph Service Principal. If it doesn't exist already, create it.
 $graphsp = GetOrCreateMicrosoftGraphServicePrincipal
-  
+
 $existingapp = $null
-$existingapp = get-azureadapplication -SearchString $applicationName
+$existingapp = get-azureadapplication -Filter "DisplayName eq '$applicationName'"
 if ($existingapp) {
     Remove-Azureadapplication -ObjectId $existingApp.objectId
 }
- 
+
 $rsps = @()
 if ($graphsp) {
     $rsps += $graphsp
@@ -141,19 +147,22 @@ if ($graphsp) {
   
     Write-Host "Creating the AAD application $applicationName" -ForegroundColor Blue
 
+    $randomGuid = [guid]::newguid()
+    $identifierUri = $appIdURI + '/' + $randomGuid.toString().Split('-')[0]
+
     try 
     {
     $aadApplication = New-AzureADApplication -DisplayName $applicationName `
         -HomePage $homePage `
         -ReplyUrls $homePage `
-        -IdentifierUris $appIdURI `
+        -IdentifierUris $identifierUri `
         -LogoutUrl $logoutURI `
         -RequiredResourceAccess $requiredResourcesAccess `
         -PasswordCredentials $appKey
 
     }
     catch [Exception] {
-        echo $_.Exception|format-list -force
+        Write-Host $_.Exception | format-list -force
     }
 
     Write-Host "App Created" -ForegroundColor Green
@@ -166,11 +175,38 @@ if ($graphsp) {
     Write-Host "Application ID: $aadApplication.AppId" -ForegroundColor DarkYellow
     Write-Host "Application Secret: $appkey.Value" -ForegroundColor DarkYellow
     $tenant_id = (Get-AzureADTenantDetail).ObjectId
-    Write-Host "Tenant ID: $tenant_id" -ForegroundColor DarkYellow   
+    Write-Host "Tenant ID: $tenant_id" -ForegroundColor DarkYellow 
 
-	[hashtable]$Return = @{} 
+
+    if($createNativeApp) {
+        $nativeApplicationName = $applicationName + '_native'
+
+        $existingapp = get-azureadapplication -SearchString $nativeApplicationName
+        if ($existingapp) {
+            Remove-Azureadapplication -ObjectId $existingApp.objectId
+        }
+
+        Write-Host "Creating Native App"
+        try 
+        {
+            $nativceApplication = New-AzureADApplication -DisplayName $nativeApplicationName `
+                -ReplyUrls $nativeAppReplyUri `
+                -RequiredResourceAccess $requiredResourcesAccess `
+                -PublicClient $true
+
+        }
+        catch [Exception] {
+            Write-Host $_.Exception | format-list -force
+        }
+        $servicePrincipal = New-AzureADServicePrincipal -AppId $nativceApplication.AppId
+        Write-Host "Native App Created" -ForegroundColor Green
+    }
+
+	[hashtable]$Return = @{}
 	$Return.appId = [string]$aadApplication.AppId
 	$Return.appSecret = [string]$appkey.Value
+    $Return.nativeAppId = [string]$nativceApplication.AppId
+    $Return.nativeReplyUrl = [string]$nativeAppReplyUri
 	Return $Return 
 }
 else {
