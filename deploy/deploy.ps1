@@ -112,6 +112,13 @@ Write-Verbose ($adAppResult | Out-String)
 # Create and train luis app
 Write-Host "Training LUIS"
 Write-Host "Login using CRM Credentials" -ForegroundColor Yellow
+Write-Verbose "Calling LUIS Trainer with following parameters: 
+--crmurl $($templateParameters.crmurl) 
+--redirecturl $($adAppResult.nativeReplyUrl)
+--clientid $($adAppResult.nativeAppId)`
+--templatepath $("$ScriptPath\luistemplate\d365bot.json")
+--authoringkey $($luisAuthoringKey)"
+
 Start-Sleep -m 2000
 $luisAppId = & "$ScriptPath\trainluis\Microsoft.Dynamics.BotFramework.Luis.exe" `
     --crmurl $templateParameters.crmurl`

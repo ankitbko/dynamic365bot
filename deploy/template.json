@@ -116,7 +116,7 @@
 						},
 						{
 							"name": "KeyVaultResourceId",
-							"value": "[variables('keyVaultName')]"
+							"value": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets')]"
 						},
 						{
 							"name": "ActiveDirectory.Mode",
@@ -137,6 +137,24 @@
 					]
 				}
 			},
+			"resources": [
+				{
+                    "type": "extensions",
+                    "name": "MSDeploy",
+                    "apiVersion": "2016-08-01",
+                    "location": "[resourceGroup().location]",
+                    "tags": {
+                        "displayName": "WebDeployforWebApp"
+                    },
+                    "properties": {
+                        "alwaysOn": true,
+                        "packageUri": "https://github.com/ankitbko/dynamic365bot/raw/master/release/PublishOutput.zip"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('botSiteName'))]"
+                    ]
+                }
+			],
 			"dependsOn": [
 				"[resourceId('Microsoft.Web/serverfarms', variables('botPlanName'))]"
 			]
