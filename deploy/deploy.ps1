@@ -100,7 +100,7 @@ Write-Verbose ($deploymentResult | Out-String)
 $luisSubscriptionKey = $deploymentResult.Outputs.luisKey.Value
 $botSiteObject = $deploymentResult.Outputs.item("botSite").Value.ToString() | ConvertFrom-Json
 $botHostName = $botSiteObject.properties.defaultHostname
-$botCallbackUrl = "https://$botHostName/api/OAuthCallback"
+$botCallbackUrl = "https://$botHostName/Callback"
 
 # Register AzureAD V1 App.
 Write-Host "Creating Azure App"
@@ -127,8 +127,8 @@ $luisAppId = & "$ScriptPath\trainluis\Microsoft.Dynamics.BotFramework.Luis.exe" 
     --templatepath "$ScriptPath\luistemplate\d365bot.json" `
     --authoringkey $luisAuthoringKey
 
-#update luis appid in keyvault
-Write-Host "Setting Luis AppId in Key Vault"
+#update luis appid, ad app clientid and client secret in keyvault
+Write-Host "Setting Luis AppId, AD App ClientId and Secret in Key Vault"
 $userId = (Get-AzureRmContext).Account.Id
 $userObjectId = (Get-AzureADUser -ObjectId $userId).ObjectId
 $accessPolicyResult = Set-AzureRmKeyVaultAccessPolicy -VaultName $deploymentResult.Outputs.keyVaultName.Value -ObjectId $userObjectId -PermissionsToSecrets set,get,list -PassThru
@@ -136,13 +136,17 @@ Write-Verbose ($accessPolicyResult | Out-String)
 $luisSecret = ConvertTo-SecureString -String $luisAppId -AsPlainText -Force
 Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'LuisModelId' -SecretValue $luisSecret
 
+$clientId = ConvertTo-SecureString -String $luisAppId -AsPlainText -Force
+Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'ActiveDirectoryClientId' -SecretValue $clientId
+
+$clientSecret = ConvertTo-SecureString -String $luisAppId -AsPlainText -Force
+Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'ActiveDirectoryClientSecret' -SecretValue $clientSecret
+
 # Update WebApp Config
-Write-Host "Updating AppSettings"
+Write-Host "Updating AppSettings with redirect url"
 $botApp = Get-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName
 $AppSettings =	@{
 	"ActiveDirectory.RedirectUrl" = "$botCallbackUrl";
-	"ActiveDirectory.ClientId" = "$($adAppResult.appId)";
-	"ActiveDirectory.ClientSecret" = "$($adAppResult.appSecret)" 
 }
 foreach ($pair in $botApp.SiteConfig.AppSettings) { $AppSettings[$pair.Name] = $pair.Value }
 

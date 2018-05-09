@@ -25,6 +25,25 @@
 				"description": "Plan for the bot service. F0 for free or S1 for standard."
 			}
 		},
+		"storageAccountName": {
+			"type": "String",
+			"metadata": {
+				"description": "Name of storage account."
+			}
+		},
+		"storageAccountType": {
+			"type": "string",
+			"defaultValue": "Standard_LRS",
+			"allowedValues": [
+				"Standard_LRS",
+				"Standard_GRS",
+				"Standard_ZRS",
+				"Premium_LRS"
+			],
+			"metadata": {
+				"description": "Storage Account type"
+			}
+		},
 		"luisName": {
 			"type": "String",
 			"metadata": {
@@ -71,7 +90,7 @@
 		"botPlanName": "serverfarm_dynamicbot",
 		"identityResourceId": "[concat(resourceId('Microsoft.Web/sites', parameters('botSiteName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
 		"keyVaultName": "[substring(concat('KeyVault',parameters('botName'),uniqueString(resourceGroup().id)),0,22)]",
-		"activeDirectoryMode": "v1",
+		"useTableStorage2ForConversationState": "true",
 		"activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
 		"tenantId": "[subscription().tenantId]",
 		"appInsightsName": "[concat(parameters('botSiteName'), 'appInsight')]"
@@ -89,6 +108,19 @@
 			"name": "[variables('botPlanName')]",
 			"apiVersion": "2016-09-01",
 			"location": "[resourceGroup().location]"
+		},
+		{
+			"type": "Microsoft.Storage/storageAccounts",
+			"name": "[parameters('storageAccountName')]",
+			"apiVersion": "2017-10-01",
+			"location": "[resourceGroup().location]",
+			"sku": {
+				"name": "[parameters('storageAccountType')]"
+			},
+			"kind": "StorageV2", 
+			"properties": {
+				"accessTier": "Hot"
+			}
 		},
 		{
 			"type": "Microsoft.Web/sites",
@@ -119,21 +151,13 @@
 							"value": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/secrets')]"
 						},
 						{
-							"name": "ActiveDirectory.Mode",
-							"value": "[variables('activeDirectoryMode')]"
+							"name": "UseTableStorage2ForConversationState",
+							"value": "[variables('useTableStorage2ForConversationState')]"
 						},
 						{
 							"name": "ActiveDirectory.EndpointUrl",
 							"value": "[variables('activeDirectoryEndpointUrl')]"
 						},
-						{
-							"name": "ActiveDirectory.ResourceId",
-							"value": "[parameters('crmUrl')]"
-						},
-						{
-							"name": "ActiveDirectory.Tenant",
-							"value": "[variables('tenantId')]"
-						}
 					]
 				}
 			},
@@ -237,6 +261,40 @@
 			"apiVersion": "2015-06-01",
 			"properties": {
 				"value": "[parameters('crmApiVersion')]"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
+			]
+		},
+		{
+			"type": "Microsoft.KeyVault/vaults/secrets",
+			"name": "[concat(variables('keyVaultName'), '/', 'StorageAccountConnectionString')]",
+			"apiVersion": "2015-06-01",
+			"properties": {
+				"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=',  listKeys(resourceId('Microsoft.Storage/storageAccounts',  parameters('storageAccountName')), providers('Microsoft.Storage',  'storageAccounts').apiVersions[0]).keys[0].value, ';')]"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
+				"[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+			]
+		},
+		{
+			"type": "Microsoft.KeyVault/vaults/secrets",
+			"name": "[concat(variables('keyVaultName'), '/', 'ActiveDirectoryResourceId')]",
+			"apiVersion": "2015-06-01",
+			"properties": {
+				"value": "[parameters('crmUrl')]"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
+			]
+		},
+		{
+			"type": "Microsoft.KeyVault/vaults/secrets",
+			"name": "[concat(variables('keyVaultName'), '/', 'ActiveDirectoryTenant')]",
+			"apiVersion": "2015-06-01",
+			"properties": {
+				"value": "[variables('tenantId')]"
 			},
 			"dependsOn": [
 				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]"
