@@ -136,17 +136,17 @@ Write-Verbose ($accessPolicyResult | Out-String)
 $luisSecret = ConvertTo-SecureString -String $luisAppId -AsPlainText -Force
 Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'LuisModelId' -SecretValue $luisSecret
 
-$clientId = ConvertTo-SecureString -String $luisAppId -AsPlainText -Force
+$clientId = ConvertTo-SecureString -String $adAppResult.appId -AsPlainText -Force
 Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'ActiveDirectoryClientId' -SecretValue $clientId
 
-$clientSecret = ConvertTo-SecureString -String $luisAppId -AsPlainText -Force
+$clientSecret = ConvertTo-SecureString -String $adAppResult.appSecret -AsPlainText -Force
 Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'ActiveDirectoryClientSecret' -SecretValue $clientSecret
 
 # Update WebApp Config
 Write-Host "Updating AppSettings with redirect url"
 $botApp = Get-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName
 $AppSettings =	@{
-	"ActiveDirectory.RedirectUrl" = "$botCallbackUrl";
+	"ActiveDirectoryRedirectUrl" = "$botCallbackUrl";
 }
 foreach ($pair in $botApp.SiteConfig.AppSettings) { $AppSettings[$pair.Name] = $pair.Value }
 

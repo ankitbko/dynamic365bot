@@ -1,5 +1,5 @@
 {
-  "luis_schema_version": "2.2.0",
+  "luis_schema_version": "3.0.0",
   "versionId": "0.1",
   "name": "d365bot",
   "desc": "",
@@ -29,13 +29,16 @@
   ],
   "entities": [
     {
-      "name": "AccountName"
+      "name": "AccountName",
+      "roles": []
     },
     {
-      "name": "Id"
+      "name": "Id",
+      "roles": []
     },
     {
-      "name": "ViewStatus"
+      "name": "ViewStatus",
+      "roles": []
     }
   ],
   "composites": [
@@ -44,7 +47,8 @@
       "children": [
         "EntityType",
         "ViewStatus"
-      ]
+      ],
+      "roles": []
     }
   ],
   "closedLists": [
@@ -86,21 +90,42 @@
             "account",
             "accounts"
           ]
+        },
+        {
+          "canonicalForm": "opportunity",
+          "list": [
+            "opportunity",
+            "opportunities",
+            "oppurtunity",
+            "opportnity"
+          ]
+        },
+        {
+          "canonicalForm": "product",
+          "list": [
+            "product",
+            "products",
+            "prodcuts",
+            "prodcut"
+          ]
         }
-      ]
+      ],
+      "roles": []
     }
   ],
+  "patternAnyEntities": [],
   "regex_entities": [],
-  "bing_entities": [],
+  "prebuiltEntities": [],
   "model_features": [
     {
       "name": "AccountNames",
       "mode": true,
-      "words": "hp,hewlett,hewlett packard,microsoft,dell,infosys,apple,cisco,wipro,intel,oracle,nokia,tcs,motorola,canon,vista",
+      "words": "hp,hewlett,hewlett packard,microsoft,dell,infosys,apple,cisco,wipro,intel,oracle,nokia,tcs,motorola,canon,vista,wallmart,htc,blackberry,ericsson,siemens,philips,verizon",
       "activated": true
     }
   ],
   "regex_features": [],
+  "patterns": [],
   "utterances": [
     {
       "text": "\" bye good night\",",
@@ -6067,6 +6092,17 @@
       ]
     },
     {
+      "text": "open opportunity with microsoft",
+      "intent": "OpenRecord",
+      "entities": [
+        {
+          "entity": "AccountName",
+          "startPos": 22,
+          "endPos": 30
+        }
+      ]
+    },
+    {
       "text": "open record for this",
       "intent": "None",
       "entities": []
@@ -6178,9 +6214,35 @@
       ]
     },
     {
+      "text": "show me associated products",
+      "intent": "OpenRelatedRecords",
+      "entities": []
+    },
+    {
       "text": "show me emails with this record",
       "intent": "OpenRelatedRecords",
       "entities": []
+    },
+    {
+      "text": "show me opportunity with walmart",
+      "intent": "OpenRecord",
+      "entities": []
+    },
+    {
+      "text": "show me products for this",
+      "intent": "OpenRelatedRecords",
+      "entities": []
+    },
+    {
+      "text": "show me recent opportunity with wallmart",
+      "intent": "OpenRecord",
+      "entities": [
+        {
+          "entity": "AccountName",
+          "startPos": 32,
+          "endPos": 39
+        }
+      ]
     },
     {
       "text": "show me related hold activity records",
@@ -6290,6 +6352,33 @@
     },
     {
       "text": "what are emails associated with this case",
+      "intent": "OpenRelatedRecords",
+      "entities": []
+    },
+    {
+      "text": "what are hp opportunities",
+      "intent": "OpenRecord",
+      "entities": [
+        {
+          "entity": "AccountName",
+          "startPos": 9,
+          "endPos": 10
+        }
+      ]
+    },
+    {
+      "text": "what are open opportunity with hewlett",
+      "intent": "OpenRecord",
+      "entities": [
+        {
+          "entity": "AccountName",
+          "startPos": 31,
+          "endPos": 37
+        }
+      ]
+    },
+    {
+      "text": "what are products for this opportunity",
       "intent": "OpenRelatedRecords",
       "entities": []
     },

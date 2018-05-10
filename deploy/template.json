@@ -155,7 +155,7 @@
 							"value": "[variables('useTableStorage2ForConversationState')]"
 						},
 						{
-							"name": "ActiveDirectory.EndpointUrl",
+							"name": "ActiveDirectoryEndpointUrl",
 							"value": "[variables('activeDirectoryEndpointUrl')]"
 						},
 					]
@@ -271,7 +271,7 @@
 			"name": "[concat(variables('keyVaultName'), '/', 'StorageAccountConnectionString')]",
 			"apiVersion": "2015-06-01",
 			"properties": {
-				"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=',  listKeys(resourceId('Microsoft.Storage/storageAccounts',  parameters('storageAccountName')), providers('Microsoft.Storage',  'storageAccounts').apiVersions[0]).keys[0].value, ';')]"
+				"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=',  listKeys(resourceId('Microsoft.Storage/storageAccounts',  parameters('storageAccountName')), providers('Microsoft.Storage',  'storageAccounts').apiVersions[0]).keys[0].value, ';EndpointSuffix=core.windows.net')]"
 			},
 			"dependsOn": [
 				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
