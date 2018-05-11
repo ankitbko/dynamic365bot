@@ -157,7 +157,7 @@
 						{
 							"name": "ActiveDirectoryEndpointUrl",
 							"value": "[variables('activeDirectoryEndpointUrl')]"
-						},
+						}
 					]
 				}
 			},
@@ -303,7 +303,7 @@
 		{
 			"apiVersion": "2016-02-01-preview",
 			"name": "[parameters('luisName')]",
-			"location": "[resourceGroup().location]",
+			"location": "West US",
 			"type": "Microsoft.CognitiveServices/accounts",
 			"kind": "LUIS",
 			"sku": {
