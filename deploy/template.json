@@ -275,7 +275,7 @@
 			},
 			"dependsOn": [
 				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
-				"[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+				"[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
 			]
 		},
 		{
