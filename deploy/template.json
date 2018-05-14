@@ -61,6 +61,21 @@
 				"description": "Plan for LUIS service. F0 for free or S0 for standard."
 			}
 		},
+		"appInsightLocation": {
+			"defaultValue": "S0",
+			"type": "String",
+			"allowedValues": [
+				"East US",
+				"South Central US",
+				"West US 2",
+				"North Europe",
+				"West Europe",
+				"Southeast Asia"
+			],
+			"metadata": {
+				"description": "Location for App Insight"
+			}
+		},
 		"crmUrl": {
 			"type": "String",
 			"metadata": {
@@ -316,7 +331,7 @@
 			"type": "microsoft.insights/components",
 			"kind": "web",
 			"apiVersion": "2015-05-01",
-			"location": "[resourceGroup().location]",
+			"location": "[parameters('appInsightLocation')]",
 			"tags": {
 				"[concat('hidden-link:', resourceId('Microsoft.BotService/botServices/', parameters('botName')))]": "Resource"
 			},
