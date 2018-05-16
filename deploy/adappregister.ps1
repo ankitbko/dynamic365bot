@@ -105,7 +105,8 @@ function GetOrCreateMicrosoftGraphServicePrincipal {
   
     return $graphsp
 }
-  
+
+Write-Host "Logging in... Enter Azure credentials"
 Connect-AzureAD
 Write-Verbose "Tenant: $((Get-AzureADTenantDetail).displayName)"
   
@@ -149,10 +150,10 @@ if ($graphsp) {
     Write-Verbose "Creating the AAD application $applicationName"
 
     $randomGuid = [guid]::newguid()
-    $identifierUri = $appIdURI + '/' + $randomGuid.toString().Split('-')[0]
+    $verifiedDomain = ((Get-AzureADTenantDetail).VerifiedDomains | where {$_.Capabilities -like '*OrgIdAuthentication*'})[0].Name
+    $identifierUri = 'https://' + $verifiedDomain + '/' + $randomGuid.toString().Split('-')[0]
 
-    try 
-    {
+
     $aadApplication = New-AzureADApplication -DisplayName $applicationName `
         -HomePage $homePage `
         -ReplyUrls $homePage `
@@ -160,11 +161,6 @@ if ($graphsp) {
         -LogoutUrl $logoutURI `
         -RequiredResourceAccess $requiredResourcesAccess `
         -PasswordCredentials $appKey
-
-    }
-    catch [Exception] {
-        Write-Verbose $_.Exception | format-list -force
-    }
 
     Write-Verbose "App Created"
       
