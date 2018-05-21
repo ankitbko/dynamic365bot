@@ -104,8 +104,8 @@ else{
 # Start the deployment
 Write-Host "Starting Azure resources deployment. This may take a while...";
 if(![String]::IsNullOrWhiteSpace($parametersFilePath) -And (Test-Path $parametersFilePath)) {
-    New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath;
+    New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath;
 } else {
-    New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterObject  $templateParameters;
+    New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterObject  $templateParameters;
 }
 Write-Host "Deployment done.";
