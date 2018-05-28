@@ -119,7 +119,7 @@ Write-Verbose "Calling LUIS Trainer with following parameters:
 --templatepath $("$ScriptPath\luistemplate\d365bot.json")
 --authoringkey $($luisAuthoringKey)"
 
-Start-Sleep -m 2000
+Start-Sleep -m 5000
 $luisAppId = & "$ScriptPath\trainluis\Microsoft.Dynamics.BotFramework.Luis.exe" `
     --crmurl $templateParameters.crmurl`
     --redirecturl $adAppResult.nativeReplyUrl `

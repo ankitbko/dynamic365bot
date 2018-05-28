@@ -92,7 +92,7 @@ Function ComputePassword {
 }
   
 function GetOrCreateMicrosoftGraphServicePrincipal {
-    $graphsp = Get-AzureADServicePrincipal -SearchString "Microsoft.CRM"
+    $graphsp = Get-AzureADServicePrincipal -SearchString "Dynamics CRM Online"
     $graphsp = $graphsp[0]
     if (!$graphsp) {
         $graphsp = Get-AzureADServicePrincipal -SearchString "Microsoft.Azure.AgregatorService"

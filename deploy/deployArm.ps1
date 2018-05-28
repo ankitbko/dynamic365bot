@@ -80,9 +80,11 @@ Select-AzureRmSubscription -SubscriptionID $subscriptionId;
 # Register RPs
 $resourceProviders = @("microsoft.cognitiveservices","microsoft.web");
 if($resourceProviders.length) {
-    Write-Verbose "Registering resource providers"
     foreach($resourceProvider in $resourceProviders) {
-        RegisterRP($resourceProvider);
+        $regStatus = Get-AzureRmResourceProvider -ProviderNamespace $resourceProvider
+        if(($regStatus.RegistrationState -eq 'NotRegistered').Count -gt 0) {
+            RegisterRP($resourceProvider);
+        }
     }
 }
 
