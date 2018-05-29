@@ -28,7 +28,7 @@
 		"storageAccountName": {
 			"type": "String",
 			"metadata": {
-				"description": "Name of storage account."
+				"description": "Name of storage account. Must be lowercase and length must be between 3 to 24 characters. Name will be truncated if exceeds 24 character."
 			}
 		},
 		"storageAccountType": {
@@ -108,7 +108,8 @@
 		"useTableStorage2ForConversationState": "true",
 		"activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
 		"tenantId": "[subscription().tenantId]",
-		"appInsightsName": "[concat(parameters('botSiteName'), 'appInsight')]"
+		"appInsightsName": "[concat(parameters('botSiteName'), 'appInsight')]",
+		"storageAccountName": "[toLower(take(parameters('storageAccountName'), 20))]"
 	},
 	"resources": [{
 			"type": "Microsoft.Web/serverfarms",
@@ -126,7 +127,7 @@
 		},
 		{
 			"type": "Microsoft.Storage/storageAccounts",
-			"name": "[parameters('storageAccountName')]",
+			"name": "[variables('storageAccountName')]",
 			"apiVersion": "2017-10-01",
 			"location": "[resourceGroup().location]",
 			"sku": {
@@ -286,11 +287,11 @@
 			"name": "[concat(variables('keyVaultName'), '/', 'StorageAccountConnectionString')]",
 			"apiVersion": "2015-06-01",
 			"properties": {
-				"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=',  listKeys(resourceId('Microsoft.Storage/storageAccounts',  parameters('storageAccountName')), providers('Microsoft.Storage',  'storageAccounts').apiVersions[0]).keys[0].value, ';EndpointSuffix=core.windows.net')]"
+				"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=',  listKeys(resourceId('Microsoft.Storage/storageAccounts',  variables('storageAccountName')), providers('Microsoft.Storage',  'storageAccounts').apiVersions[0]).keys[0].value, ';EndpointSuffix=core.windows.net')]"
 			},
 			"dependsOn": [
 				"[concat('Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
-				"[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
+				"[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
 			]
 		},
 		{
