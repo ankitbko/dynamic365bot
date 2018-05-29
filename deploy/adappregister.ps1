@@ -92,15 +92,15 @@ Function ComputePassword {
 }
   
 function GetOrCreateMicrosoftGraphServicePrincipal {
-    $graphsp = Get-AzureADServicePrincipal -SearchString "Dynamics CRM Online"
+    $graphsp = Get-AzureADServicePrincipal -Filter "DisplayName eq 'Dynamics CRM Online'"
     $graphsp = $graphsp[0]
     if (!$graphsp) {
-        $graphsp = Get-AzureADServicePrincipal -SearchString "Microsoft.Azure.AgregatorService"
+        $graphsp = Get-AzureADServicePrincipal -Filter "AppId eq '00000007-0000-0000-c000-000000000000'"
     }
     if (!$graphsp) {
         Login-AzureAccount
-        New-AzureRmADServicePrincipal -ApplicationId "00000003-0000-0000-c000-000000000000"
-        $graphsp = Get-AzureADServicePrincipal -SearchString "Microsoft Graph"
+        New-AzureRmADServicePrincipal -ApplicationId "00000007-0000-0000-c000-000000000000"
+        $graphsp = Get-AzureADServicePrincipal -SearchString "Dynamics CRM Online"
     }
   
     return $graphsp
