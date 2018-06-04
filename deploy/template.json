@@ -109,7 +109,9 @@
 		"activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
 		"tenantId": "[subscription().tenantId]",
 		"appInsightsName": "[concat(parameters('botSiteName'), 'appInsight')]",
-		"storageAccountName": "[toLower(take(parameters('storageAccountName'), 20))]"
+		"storageAccountName": "[toLower(take(parameters('storageAccountName'), 20))]",
+		"repositoryUrl": "https://github.com/ankitbko/human-handoff-bot",
+		"branch": "master"
 	},
 	"resources": [{
 			"type": "Microsoft.Web/serverfarms",
@@ -179,21 +181,18 @@
 			},
 			"resources": [
 				{
-                    "type": "extensions",
-                    "name": "MSDeploy",
-                    "apiVersion": "2016-08-01",
-                    "location": "[resourceGroup().location]",
-                    "tags": {
-                        "displayName": "WebDeployforWebApp"
-                    },
-                    "properties": {
-                        "alwaysOn": true,
-                        "packageUri": "https://github.com/ankitbko/dynamic365bot/raw/master/release/PublishOutput.zip"
-                    },
-                    "dependsOn": [
-                        "[concat('Microsoft.Web/sites/', parameters('botSiteName'))]"
-                    ]
-                }
+					"name": "web",
+					"type": "sourcecontrols",
+					"apiVersion": "2015-08-01",
+					"dependsOn": [
+					"[resourceId('Microsoft.Web/sites', parameters('botSiteName'))]"
+					],
+					"properties": {
+					"RepoUrl": "[variables('repositoryUrl')]",
+					"branch": "[variables('branch')]",
+					"IsManualIntegration": true
+					}
+				}
 			],
 			"dependsOn": [
 				"[resourceId('Microsoft.Web/serverfarms', variables('botPlanName'))]"
