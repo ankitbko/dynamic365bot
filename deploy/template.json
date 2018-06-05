@@ -109,9 +109,7 @@
 		"activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
 		"tenantId": "[subscription().tenantId]",
 		"appInsightsName": "[concat(parameters('botSiteName'), 'appInsight')]",
-		"storageAccountName": "[toLower(take(parameters('storageAccountName'), 20))]",
-		"repositoryUrl": "https://github.com/ankitbko/human-handoff-bot",
-		"branch": "master"
+		"storageAccountName": "[toLower(take(parameters('storageAccountName'), 20))]"
 	},
 	"resources": [{
 			"type": "Microsoft.Web/serverfarms",
@@ -179,21 +177,6 @@
 					]
 				}
 			},
-			"resources": [
-				{
-					"name": "web",
-					"type": "sourcecontrols",
-					"apiVersion": "2015-08-01",
-					"dependsOn": [
-					"[resourceId('Microsoft.Web/sites', parameters('botSiteName'))]"
-					],
-					"properties": {
-					"RepoUrl": "[variables('repositoryUrl')]",
-					"branch": "[variables('branch')]",
-					"IsManualIntegration": true
-					}
-				}
-			],
 			"dependsOn": [
 				"[resourceId('Microsoft.Web/serverfarms', variables('botPlanName'))]"
 			]
