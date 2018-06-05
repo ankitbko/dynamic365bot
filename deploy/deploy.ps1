@@ -71,7 +71,7 @@ if(!(Get-PSRepository -Name "PSGallery")) {
 	Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 }
 
-if(!(Get-Module -Listavailable -Name AzureRM)) {
+if(!(Get-Module -Listavailable -Name AzureRM) -Or ((Get-Module -Name AzureRm -ListAvailable).Version -lt [System.Version]"6.1.1")) {
     Write-Host "Installing AzureRM" -ForegroundColor DarkYellow
 	Install-Module -Name AzureRM -AllowClobber
 }
@@ -101,6 +101,17 @@ $luisSubscriptionKey = $deploymentResult.Outputs.luisKey.Value
 $botSiteObject = $deploymentResult.Outputs.item("botSite").Value.ToString() | ConvertFrom-Json
 $botHostName = $botSiteObject.properties.defaultHostname
 $botCallbackUrl = "https://$botHostName/Callback"
+
+# Start deployment in background.
+Write-Host "Starting bot deployment in background"
+$sourceControlProp = @{
+    "RepoUrl" = "https://github.com/ankitbko/dynamic365bot/";
+    "branch" = "master";
+    "IsManualIntegration" = $true;
+
+}
+Write-Verbose "Source Control prop: $($sourceControlProp | Out-String)"
+$deploymentJob = Set-AzureRmResource -PropertyObject $sourceControlProp -ResourceGroupName $resourceGroupName -ResourceType Microsoft.Web/sites/sourcecontrols -ResourceName "$($botSiteObject.properties.name)/web" -ApiVersion 2016-08-01 -Force -AsJob
 
 # Register AzureAD V1 App.
 Write-Host "Creating Azure App"
@@ -142,19 +153,6 @@ Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value 
 $clientSecret = ConvertTo-SecureString -String $adAppResult.appSecret -AsPlainText -Force
 Set-AzureKeyVaultSecret -VaultName $deploymentResult.Outputs.keyVaultName.Value -Name 'ActiveDirectoryClientSecret' -SecretValue $clientSecret
 
-# Update WebApp Config
-Write-Host "Updating AppSettings with redirect url"
-$botApp = Get-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName
-$AppSettings =	@{
-	"ActiveDirectoryRedirectUrl" = "$botCallbackUrl";
-}
-foreach ($pair in $botApp.SiteConfig.AppSettings) { $AppSettings[$pair.Name] = $pair.Value }
-
-Set-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName -AppSettings $AppSettings
-
-Write-Verbose "Appsettings Updated"
-Write-Verbose ($AppSettings | Out-String)
-
 # Create a App Insight API key and set it to Bot Registration
 Write-Host "Generating AppInsight API Key"
 $apiKeyDescription="DynamicsBotkey"
@@ -171,6 +169,25 @@ Write-Verbose "New Bot Registration Property: $($botRegistration.Properties | Ou
 $botRegistration | Set-AzureRmResource -Force
 Write-Host "AppInsight API Key Set"
 
-Write-Host "---------------------------------" -ForegroundColor Green
-Write-Host "LUIS Key: $luisSubscriptionKey" -ForegroundColor Green
-Write-Host "---------------------------------" -ForegroundColor Green
+Write-Host "Deployment in progress. Waiting for it to end. This may take 15-20 minutes to complete."
+Wait-Job $deploymentJob
+Write-Verbose ($deploymentJob | Out-String)
+if($deploymentJob.State -eq "Completed") {
+    Write-Host "Bot deployed."
+
+    # Update WebApp Config
+    Write-Host "Updating AppSettings with redirect url"
+    $botApp = Get-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName
+    $AppSettings =	@{
+    	"ActiveDirectoryRedirectUrl" = "$botCallbackUrl";
+    }
+    foreach ($pair in $botApp.SiteConfig.AppSettings) { $AppSettings[$pair.Name] = $pair.Value }
+
+    Set-AzureRmWebapp -Name $botSiteObject.properties.name -ResourceGroup $botSiteObject.resourceGroupName -AppSettings $AppSettings
+
+    Write-Verbose "Appsettings Updated"
+    Write-Verbose ($AppSettings | Out-String)
+} else {
+    Write-Host "Deployment Failed. Delete the resource group and run the script again." -ForegroundColor Red
+}
+

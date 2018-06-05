@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            width: 100%
+        }
+
+        #content {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0px;
+            height: 100%;
+            width: 100%
+        }
+    </style>
+    <link href="https://unpkg.com/botframework-webchat/botchat.css" rel="stylesheet" />
+    
+</head>
+<body>
+    <div id="bot" />
+    <script src="https://unpkg.com/botframework-webchat/botchat.js"></script>
+    <script src="https://unpkg.com/botframework-webchat/CognitiveServices.js"></script>    
+    <script>
+        //var speechOptions = {
+        //    speechRecognizer: new CognitiveServices.SpeechRecognizer({ subscriptionKey: '' })
+        //}
+
+        var webChatSecret = '';
+        fetch('/api/token')
+            .then(async function (response) {
+                let result = await response.json();
+                if (response.ok)
+                    webChatSecret = result;
+                else
+                    console.log(result);
+            })
+            .then(function () {
+                console.log('webchat: ' + webChatSecret);
+                // Ensure userid changes for each page instance.
+                var userid = Math.random().toString(36).substr(2, 5);
+                BotChat.App({
+                    directLine: { secret: webChatSecret },
+                    //speechOptions: speechOptions,
+                    user: { id: userid },
+                    resize: 'detect'
+                }, document.getElementById("bot"));
+            });
+        
+    </script>
+</body>
+</html>
