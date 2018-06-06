@@ -7,10 +7,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Dynamics.Dynamics
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Cosmic.Debug|Any CPU = Cosmic.Debug|Any CPU
+		Cosmic.Release|Any CPU = Cosmic.Release|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5A6F8658-C2C6-4A13-AA95-BC56CCE0851D}.Cosmic.Debug|Any CPU.ActiveCfg = Cosmic.Debug|Any CPU
+		{5A6F8658-C2C6-4A13-AA95-BC56CCE0851D}.Cosmic.Debug|Any CPU.Build.0 = Cosmic.Debug|Any CPU
+		{5A6F8658-C2C6-4A13-AA95-BC56CCE0851D}.Cosmic.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A6F8658-C2C6-4A13-AA95-BC56CCE0851D}.Cosmic.Release|Any CPU.Build.0 = Debug|Any CPU
 		{5A6F8658-C2C6-4A13-AA95-BC56CCE0851D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5A6F8658-C2C6-4A13-AA95-BC56CCE0851D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A6F8658-C2C6-4A13-AA95-BC56CCE0851D}.Release|Any CPU.ActiveCfg = Release|Any CPU
