@@ -61,7 +61,7 @@
         [LuisIntent("OpenRecord")]
         public async Task OpenRecord(IDialogContext context, IAwaitable<IMessageActivity> message, LuisResult luisResult)
         {
-            var entityType = (luisResult.Entities.SingleOrDefault(e => e.Type.Equals(EntityTypeKey))?.Resolution["values"] as List<object>).FirstOrDefault().ToString();
+            var entityType = (luisResult.Entities.SingleOrDefault(e => e.Type.Equals(EntityTypeKey))?.Resolution["values"] as List<object>)?.FirstOrDefault()?.ToString() ?? string.Empty;
             if (entityType.Equals(RootLuisDialog.IncidentKey, System.StringComparison.OrdinalIgnoreCase))
             {
                 var query = luisResult.Entities.SingleOrDefault(e => e.Type.Equals("Id"))?.Entity.Replace(" ", string.Empty);
@@ -200,6 +200,14 @@
             catch (CrmWebApiException webApiException)
             {
                 await HandleCrmWebApiExceptionAsync(webApiException, context);
+            }
+            catch (IncorrectLogicalNameException incorrectLogicalNameException)
+            {
+                await context.PostAsync(incorrectLogicalNameException.Message);
+            }
+            catch (NoViewFoundException)
+            {
+                await context.PostAsync(Resources.NoViewFoundExceptionMessage);
             }
             catch (Exception exception)
             {

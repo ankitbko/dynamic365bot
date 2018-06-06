@@ -106,6 +106,15 @@ namespace Microsoft.Dynamics.Dynamics365Bot.Resource {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No view found to display records..
+        /// </summary>
+        internal static string NoViewFoundExceptionMessage {
+            get {
+                return ResourceManager.GetString("NoViewFoundExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Follow the case.
         /// </summary>
         internal static string SeachCase_FollowOption {
@@ -187,7 +196,7 @@ namespace Microsoft.Dynamics.Dynamics365Bot.Resource {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Your login may have expired. Try sending the message again..
+        ///   Looks up a localized string similar to Either your login has expired or you don&apos;t have access to this operation. Try sending the message again and if you continue to get this message, contact your administrator..
         /// </summary>
         internal static string UnauthorizedError {
             get {
