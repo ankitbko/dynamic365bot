@@ -38,8 +38,8 @@
         /// <param name="entityCache">List of cached entities</param>
         /// <param name="dialogFactory">Dialog factory</param>
         /// <param name="services">LUIS services</param>
-        public RootLuisDialog(CrmClient client, 
-            ICache<string, 
+        public RootLuisDialog(CrmClient client,
+            ICache<string,
             List<IEntity>> entityCache,
             IDialogFactory dialogFactory,
             IAuthProvider authProvider,
@@ -118,13 +118,25 @@
         /// <param name="luisResult">LUIS result</param>
         /// <returns>Awaitable task.</returns>
         [LuisIntent("OpenCaseUsingAccountName")]
-        public Task SearchRecordByAccountName(IDialogContext context, LuisResult luisResult)
+        public async Task SearchRecordByAccountName(IDialogContext context, LuisResult luisResult)
         {
+            // TODO Unify this with OpenRecord
+            var entityType = (luisResult.Entities.SingleOrDefault(e => e.Type.Equals(EntityTypeKey))?.Resolution["values"] as List<object>)?.FirstOrDefault()?.ToString() ?? string.Empty;
             var name = luisResult.Entities.SingleOrDefault(entity => entity.Type.Equals("AccountName"))?.Entity;
 
-            var dialog = new SearchCaseByAccountNameDialog(this.crmClient, entityCache, name);
-            context.Call(dialog, this.ResumeVoid);
-            return Task.CompletedTask;
+            if (entityType.Equals(RootLuisDialog.IncidentKey, System.StringComparison.OrdinalIgnoreCase))
+            {
+                context.Call(new SearchCaseByAccountNameDialog(this.crmClient, entityCache, name), this.ResumeVoid);
+            }
+            else if (entityType.Equals(RootLuisDialog.OpportunityKey, System.StringComparison.OrdinalIgnoreCase))
+            {
+                context.Call(new SearchOpportunityDialog(this.crmClient, dialogFactory, accountName: name), this.ResumeVoid);
+            }
+            else
+            {
+                await context.PostAsync("Sorry, I did not understand you.");
+                context.Wait(MessageReceived);
+            }
         }
 
         /// <summary>
