@@ -135,9 +135,8 @@
       <HintPath>..\..\packages\Microsoft.Data.Services.Client.5.7.0\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Dynamics.BotFramework">
-      <HintPath>..\..\packages\MicrosoftCPE.Dynamics.BotFramework.1.0.0-preview\lib\net46\Microsoft.Dynamics.BotFramework.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Microsoft.Dynamics.BotFramework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MicrosoftCPE.Dynamics.BotFramework.1.0.1-preview\lib\net46\Microsoft.Dynamics.BotFramework.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Identity.Client">
       <HintPath>..\..\packages\Microsoft.Identity.Client.1.0.304142221-alpha\lib\net45\Microsoft.Identity.Client.dll</HintPath>
