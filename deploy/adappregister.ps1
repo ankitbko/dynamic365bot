@@ -106,7 +106,7 @@ function GetOrCreateMicrosoftGraphServicePrincipal {
     return $graphsp
 }
 
-Write-Host "Logging in... Enter Azure credentials"
+Write-Host "Logging in... Enter credentials for Azure Active Directory linked with CRM"
 Connect-AzureAD
 Write-Verbose "Tenant: $((Get-AzureADTenantDetail).displayName)"
   
