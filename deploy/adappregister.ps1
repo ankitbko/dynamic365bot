@@ -150,11 +150,15 @@ if ($graphsp) {
     Write-Verbose "Creating the AAD application $applicationName"
 
     $randomGuid = [guid]::newguid()
-    $verifiedDomain = ((Get-AzureADTenantDetail).VerifiedDomains | where {$_.Capabilities -like '*OrgIdAuthentication*'})[0].Name
+	$verifiedDomain = ''
+	$domains = ((Get-AzureADTenantDetail).VerifiedDomains | where {$_.Capabilities -like '*OrgIdAuthentication*'})
+	if($domains.count -gt 0) {
+		$verifiedDomain = 'https://' + $domains[0].Name
+	}
     if([string]::IsNullOrEmpty($verifiedDomain)) {
         $verifiedDomain = $appIdURI
     }
-    $identifierUri = 'https://' + $verifiedDomain + '/' + $randomGuid.toString().Split('-')[0]
+    $identifierUri = $verifiedDomain + '/' + $randomGuid.toString().Split('-')[0]
 
     $aadApplication = New-AzureADApplication -DisplayName $applicationName `
         -HomePage $homePage `
